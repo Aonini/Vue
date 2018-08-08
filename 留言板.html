@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title></title>
+		<style>
+			
+		</style>
+		<script src="./src/vue.js"></script>
+		<script type="text/html" id="list-temp">
+			<ul>
+				<li>123</li>
+				<li>123</li>
+				<li>123</li>
+				<li>123</li>
+			</ul>
+		</script>
+	</head>
+
+	<body>
+		<div id="app">
+			<header-input @add-todo-event="addTodoParent"></header-input>
+			<list @remove-todo-by-id="removeTodoParent" :list="list"></list>
+		</div>
+		<script>
+			/*
+				兄弟之间通信，状态提升，提升到公共的父组件
+			*/
+			Vue.component('header-input',{
+				data(){
+					return {
+						value: ''
+					}
+				},
+				template: `
+					<div class="header">
+						<input @keydown.13="addTodo" type="" name="" v-model="value" />
+
+					</div>
+				`,
+				methods:{
+					addTodo(){
+
+						this.$emit('add-todo-event',this.value)
+
+						this.value = '';
+					}
+				}
+			})
+
+			Vue.component('list',{
+				props:{
+					list: {
+						type: Array,
+						default(){
+							return [];
+						}
+					}
+				},
+				template: `
+					<ul>
+						<item @remove-todo-event="removeListMethods" v-for="item in list" :option="item"></item>
+					</ul>
+				`,
+				methods:{
+					removeListMethods(id){
+						this.$emit('remove-todo-by-id',id)
+					}
+				}
+			})
+			Vue.component('item',{
+				props: {
+					option: {
+						type: Object,
+						required: true
+					}
+				},
+				template: `
+					<li>
+						<span>{{option.title}}</span>
+						<button @click="removeTodo">删除</button>
+					</li>
+				`,
+				methods:{
+					removeTodo(){
+						this.$emit('remove-todo-event',this.option.id)
+					}
+				}
+			})
+
+			new Vue({
+				el: '#app',
+				data:{
+					list: [{title:'新闻',id:123}]
+				},
+				methods:{
+					addTodoParent(value){
+						this.list.push({
+							title: value,
+							id: Date.now()
+						})
+					},
+					removeTodoParent(id){
+						console.log(id);
+						let index = this.list.findIndex(item => item.id === id)
+
+						if(index !== -1){
+							this.list.splice(index,1)
+						}
+					}
+				}
+			})
+		</script>
+	</body>
+</html>
